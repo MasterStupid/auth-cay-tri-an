@@ -1,5 +1,5 @@
 [build]
-  publish = "src"
+  publish = "."                    # 👈 Sửa thành current directory
   functions = "netlify/functions"
 
 [build.environment]
@@ -9,9 +9,3 @@
   from = "/api/*"
   to = "/.netlify/functions/:splat"
   status = 200
-
-# Development settings
-[dev]
-  framework = "#static"
-  targetPort = 8888
-  port = 8888
