@@ -1,0 +1,11 @@
+{
+  "name": "cay-tri-an",
+  "version": "1.0.0",
+  "type": "module",
+  "dependencies": {
+    "pg": "^8.11.3"
+  },
+  "scripts": {
+    "build": "echo 'No build step needed'"
+  }
+}
