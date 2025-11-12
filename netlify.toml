@@ -1,0 +1,17 @@
+[build]
+  publish = "src"
+  functions = "netlify/functions"
+
+[build.environment]
+  NODE_VERSION = "18"
+
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/:splat"
+  status = 200
+
+# Development settings
+[dev]
+  framework = "#static"
+  targetPort = 8888
+  port = 8888
