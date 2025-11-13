@@ -1,43 +1,6 @@
-// Thêm CSS animation cho message disappear
-const style = document.createElement('style');
-style.textContent = `
-    @keyframes messageDisappear {
-        from { 
-            transform: translate(-50%, -50%) scale(1); 
-            opacity: 1; 
-        }
-        to { 
-            transform: translate(-50%, -50%) scale(0.7); 
-            opacity: 0; 
-        }
-    }
-    
-    .leaf-content {
-        transform: rotate(-5deg);
-        line-height: 1.2;
-    }
-    
-    .default-tree {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        height: 100%;
-        text-align: center;
-    }
-`;
-document.head.appendChild(style);
+// API Configuration
+const API_BASE = '/api';
 
-// API endpoints configuration
-const API_CONFIG = {
-    baseURL: '/.netlify/functions',
-    endpoints: {
-        getLeaves: 'get-leaves',
-        addLeaf: 'add-leaf',
-        getStats: 'get-stats'
-    }
-};
-
-// Enhanced GratitudeTree class với đầy đủ methods
 class GratitudeTree {
     constructor() {
         this.leaves = [];
@@ -51,17 +14,16 @@ class GratitudeTree {
         this.showLoading(true);
         await this.checkDatabaseConnection();
         await this.loadLeaves();
-        this.setupEventListeners();
         this.showLoading(false);
     }
 
     // Kiểm tra kết nối database
     async checkDatabaseConnection() {
         try {
-            const response = await fetch(`${API_CONFIG.baseURL}/${API_CONFIG.endpoints.getLeaves}`);
+            const response = await fetch(`${API_BASE}/get-leaves`);
             const result = await response.json();
             
-            this.isOnline = result && result.success;
+            this.isOnline = result.success;
             this.updateDatabaseStatus();
             
             if (this.isOnline) {
@@ -90,10 +52,10 @@ class GratitudeTree {
     // Load từ database
     async loadFromDatabase() {
         try {
-            const response = await fetch(`${API_CONFIG.baseURL}/${API_CONFIG.endpoints.getLeaves}`);
+            const response = await fetch(`${API_BASE}/get-leaves`);
             const result = await response.json();
             
-            if (result.success && Array.isArray(result.data)) {
+            if (result.success) {
                 this.leaves = result.data;
                 this.updateUniqueSets();
                 console.log(`✅ Loaded ${this.leaves.length} leaves from database`);
@@ -108,17 +70,11 @@ class GratitudeTree {
     loadFromLocalStorage() {
         const saved = localStorage.getItem('gratitudeLeaves');
         if (saved) {
-            try {
-                this.leaves = JSON.parse(saved);
-                this.updateUniqueSets();
-                console.log(`📦 Loaded ${this.leaves.length} leaves from localStorage`);
-            } catch (e) {
-                console.error('Error parsing localStorage data:', e);
-                this.leaves = [];
-            }
+            this.leaves = JSON.parse(saved);
+            this.updateUniqueSets();
+            console.log(`📦 Loaded ${this.leaves.length} leaves from localStorage`);
         } else {
             console.log('💫 No data found, starting with empty tree');
-            this.leaves = [];
         }
     }
 
@@ -131,8 +87,7 @@ class GratitudeTree {
             x: Math.floor(Math.random() * 450 + 75),
             y: Math.floor(Math.random() * 550 + 100),
             type: this.getRandomLeafType(),
-            gradient: this.getRandomGradient(),
-            created_at: new Date().toISOString()
+            gradient: this.getRandomGradient()
         };
 
         if (this.isOnline) {
@@ -145,11 +100,9 @@ class GratitudeTree {
     // Thêm vào database
     async addLeafToDatabase(leafData) {
         try {
-            const response = await fetch(`${API_CONFIG.baseURL}/${API_CONFIG.endpoints.addLeaf}`, {
+            const response = await fetch(`${API_BASE}/add-leaf`, {
                 method: 'POST',
-                headers: { 
-                    'Content-Type': 'application/json',
-                },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(leafData)
             });
 
@@ -165,11 +118,10 @@ class GratitudeTree {
                 
                 return savedLeaf;
             } else {
-                throw new Error(result.error || 'Unknown error');
+                throw new Error(result.error);
             }
         } catch (error) {
             console.error('Failed to save to database:', error);
-            // Fallback to localStorage
             return this.addLeafToLocalStorage(leafData);
         }
     }
@@ -178,7 +130,8 @@ class GratitudeTree {
     addLeafToLocalStorage(leafData) {
         const newLeaf = {
             ...leafData,
-            id: Date.now() + Math.random()
+            id: Date.now(),
+            created_at: new Date().toISOString()
         };
 
         this.leaves.unshift(newLeaf);
@@ -196,17 +149,13 @@ class GratitudeTree {
         this.uniqueTeachers.clear();
         
         this.leaves.forEach(leaf => {
-            if (leaf.name) this.uniqueStudents.add(leaf.name);
-            if (leaf.teacher) this.uniqueTeachers.add(leaf.teacher);
+            this.uniqueStudents.add(leaf.name);
+            this.uniqueTeachers.add(leaf.teacher);
         });
     }
 
     saveToLocalStorage() {
-        try {
-            localStorage.setItem('gratitudeLeaves', JSON.stringify(this.leaves));
-        } catch (e) {
-            console.error('Failed to save to localStorage:', e);
-        }
+        localStorage.setItem('gratitudeLeaves', JSON.stringify(this.leaves));
     }
 
     getRandomLeafType() {
@@ -220,13 +169,9 @@ class GratitudeTree {
     }
 
     updateStats() {
-        const leafCount = document.getElementById('leaf-count');
-        const studentCount = document.getElementById('student-count');
-        const teacherCount = document.getElementById('teacher-count');
-        
-        if (leafCount) leafCount.textContent = this.leaves.length;
-        if (studentCount) studentCount.textContent = this.uniqueStudents.size;
-        if (teacherCount) teacherCount.textContent = this.uniqueTeachers.size;
+        document.getElementById('leaf-count').textContent = this.leaves.length;
+        document.getElementById('student-count').textContent = this.uniqueStudents.size;
+        document.getElementById('teacher-count').textContent = this.uniqueTeachers.size;
     }
 
     updateDatabaseStatus() {
@@ -249,76 +194,6 @@ class GratitudeTree {
         }
     }
 
-    setupEventListeners() {
-        const addButton = document.getElementById('addLeafButton');
-        const closeButton = document.getElementById('closeModal');
-        const form = document.getElementById('gratitudeForm');
-
-        if (addButton) {
-            addButton.addEventListener('click', this.openForm);
-        }
-
-        if (closeButton) {
-            closeButton.addEventListener('click', this.closeForm);
-        }
-
-        if (form) {
-            form.addEventListener('submit', this.handleFormSubmit.bind(this));
-        }
-
-        // Close modal when clicking outside
-        window.addEventListener('click', (event) => {
-            const modal = document.getElementById('formModal');
-            if (event.target === modal) {
-                this.closeForm();
-            }
-        });
-
-        // Close modal with Escape key
-        document.addEventListener('keydown', (event) => {
-            if (event.key === 'Escape') {
-                this.closeForm();
-            }
-        });
-    }
-
-    openForm() {
-        document.getElementById('formModal').style.display = 'block';
-    }
-
-    closeForm() {
-        document.getElementById('formModal').style.display = 'none';
-    }
-
-    async handleFormSubmit(event) {
-        event.preventDefault();
-        
-        const studentName = document.getElementById('studentName').value.trim();
-        const teacherName = document.getElementById('teacherName').value.trim();
-        const message = document.getElementById('message').value.trim();
-        
-        if (studentName && teacherName && message) {
-            try {
-                const newLeaf = await this.addLeaf(studentName, teacherName, message);
-                
-                this.closeForm();
-                document.getElementById('studentName').value = '';
-                document.getElementById('teacherName').value = '';
-                document.getElementById('message').value = '';
-                
-                if (this.leaves.length === 1) {
-                    showSuccessMessage('🎉 Bạn đã thêm chiếc lá đầu tiên lên cây!\n\nCảm ơn bạn đã khởi đầu cho cây tri ân này! 💚', false, 5000);
-                } else {
-                    showSuccessMessage('🎉 Lá tri ân của bạn đã được thêm vào cây!\n\nCây đang có ' + this.leaves.length + ' lá tri ân. 💚', false, 4000);
-                }
-            } catch (error) {
-                showSuccessMessage('❌ Có lỗi xảy ra khi thêm lá. Vui lòng thử lại!', true);
-            }
-        } else {
-            showSuccessMessage('❌ Vui lòng điền đầy đủ thông tin!', true);
-        }
-    }
-
     getAllLeaves() {
         return this.leaves;
     }
@@ -326,87 +201,9 @@ class GratitudeTree {
     getLeafById(id) {
         return this.leaves.find(leaf => leaf.id === id);
     }
-
-    // Render leaves to the tree
-    renderLeaves() {
-        const container = document.getElementById('leaves-container');
-        if (!container) return;
-        
-        container.innerHTML = '';
-        
-        this.leaves.forEach((leaf, index) => {
-            const leafElement = this.createLeafElement(leaf, index);
-            container.appendChild(leafElement);
-        });
-
-        // Setup click handlers after a short delay
-        setTimeout(() => this.setupLeafClickHandlers(), 100);
-    }
-
-    // Create individual leaf element
-    createLeafElement(leaf, index) {
-        const leafElement = document.createElement('div');
-        leafElement.className = `leaf ${leaf.type || 'heart'} ${leaf.gradient || 'gradient-1'}`;
-        
-        leafElement.setAttribute('data-leaf-id', leaf.id);
-        
-        leafElement.style.left = (leaf.x || 100) + 'px';
-        leafElement.style.top = (leaf.y || 100) + 'px';
-        leafElement.style.animationDelay = (index * 0.1) + 's';
-        
-        const randomRotate = Math.random() * 360;
-        leafElement.style.transform = `rotate(${randomRotate}deg)`;
-        
-        leafElement.innerHTML = `
-            <div class="leaf-content">
-                <strong>${leaf.name || 'Ẩn danh'}</strong><br>
-                <small>→ ${leaf.teacher || 'Thầy/Cô'}</small>
-            </div>
-        `;
-        
-        leafElement.title = `Click để xem lời tri ân từ ${leaf.name || 'Ẩn danh'}`;
-        
-        return leafElement;
-    }
-
-    // Setup click handlers for leaves
-    setupLeafClickHandlers() {
-        const leavesContainer = document.getElementById('leaves-container');
-        if (!leavesContainer) return;
-        
-        leavesContainer.addEventListener('click', (event) => {
-            const leafElement = event.target.closest('.leaf');
-            if (leafElement) {
-                const leafId = leafElement.getAttribute('data-leaf-id');
-                if (leafId) {
-                    const leaf = this.getLeafById(leafId);
-                    if (leaf) {
-                        this.showLeafDetail(leaf);
-                    }
-                }
-            }
-        });
-    }
-
-    // Show leaf details
-    showLeafDetail(leaf) {
-        if (!leaf) return;
-        
-        const time = new Date(leaf.created_at).toLocaleDateString('vi-VN', {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit'
-        });
-        
-        const message = `💌 Lời tri ân:\n"${leaf.message}"\n\n👤 ${leaf.name}\n🎓 Gửi ${leaf.teacher}\n📅 ${time}`;
-        
-        showSuccessMessage(message, false, 8000);
-    }
 }
 
-// Khởi tạo ứng dụng
+// Khởi tạo
 const gratitudeTree = new GratitudeTree();
 
 // Hàm thay thế hình cây nếu lỗi
@@ -428,19 +225,74 @@ function replaceTreeImage() {
         </div>
     `;
     
-    if (treeContainer) {
-        treeContainer.appendChild(defaultTree);
-    }
+    treeContainer.appendChild(defaultTree);
 }
 
-// Global function để hiển thị thông báo
+// Hiển thị tất cả lá
+function renderLeaves() {
+    const container = document.getElementById('leaves-container');
+    if (!container) return;
+    
+    container.innerHTML = '';
+    
+    const leaves = gratitudeTree.getAllLeaves();
+    
+    leaves.forEach((leaf, index) => {
+        const leafElement = createLeafElement(leaf, index);
+        container.appendChild(leafElement);
+    });
+}
+
+// Tạo element lá
+function createLeafElement(leaf, index) {
+    const leafElement = document.createElement('div');
+    leafElement.className = `leaf ${leaf.type} ${leaf.gradient}`;
+    
+    leafElement.setAttribute('data-leaf-id', leaf.id);
+    
+    leafElement.style.left = leaf.x + 'px';
+    leafElement.style.top = leaf.y + 'px';
+    leafElement.style.animationDelay = (index * 0.1) + 's';
+    
+    const randomRotate = Math.random() * 360;
+    leafElement.style.transform = `rotate(${randomRotate}deg)`;
+    
+    leafElement.innerHTML = `
+        <div class="leaf-content">
+            <strong>${leaf.name}</strong><br>
+            <small>→ ${leaf.teacher}</small>
+        </div>
+    `;
+    
+    leafElement.title = `Click để xem lời tri ân từ ${leaf.name}`;
+    
+    return leafElement;
+}
+
+// Hiển thị chi tiết lá
+function showLeafDetail(leaf) {
+    if (!leaf) return;
+    
+    const time = new Date(leaf.created_at).toLocaleDateString('vi-VN', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+    });
+    
+    const message = `💌 Lời tri ân:\n"${leaf.message}"\n\n👤 ${leaf.name}\n🎓 Gửi ${leaf.teacher}\n📅 ${time}`;
+    
+    showSuccessMessage(message, false, 8000);
+}
+
+// Hiển thị thông báo
 function showSuccessMessage(message, isError = false, duration = 4000) {
     const oldMsg = document.querySelector('.success-message');
     if (oldMsg) oldMsg.remove();
     
     const successMsg = document.createElement('div');
     successMsg.className = 'success-message';
-    successMsg.style.backgroundColor = isError ? '#f44336' : '#4caf50';
     successMsg.innerHTML = message.replace(/\n/g, '<br>');
     
     const closeBtn = document.createElement('button');
@@ -460,20 +312,10 @@ function showSuccessMessage(message, isError = false, duration = 4000) {
         display: flex;
         align-items: center;
         justify-content: center;
-        border-radius: 50%;
-        transition: background-color 0.3s;
     `;
     
     closeBtn.onclick = function() {
         successMsg.remove();
-    };
-    
-    closeBtn.onmouseover = function() {
-        this.style.backgroundColor = 'rgba(255,255,255,0.2)';
-    };
-    
-    closeBtn.onmouseout = function() {
-        this.style.backgroundColor = 'transparent';
     };
     
     successMsg.appendChild(closeBtn);
@@ -491,6 +333,95 @@ function showSuccessMessage(message, isError = false, duration = 4000) {
     }, duration);
 }
 
-// Export for global access (if needed)
-window.GratitudeTree = GratitudeTree;
-window.gratitudeTree = gratitudeTree;
+// Xử lý sự kiện click trên lá
+function setupLeafClickHandlers() {
+    const leavesContainer = document.getElementById('leaves-container');
+    if (!leavesContainer) return;
+    
+    leavesContainer.addEventListener('click', function(event) {
+        const leafElement = event.target.closest('.leaf');
+        if (leafElement) {
+            const leafId = parseInt(leafElement.getAttribute('data-leaf-id'));
+            if (leafId) {
+                const leaf = gratitudeTree.getLeafById(leafId);
+                if (leaf) {
+                    showLeafDetail(leaf);
+                }
+            }
+        }
+    });
+}
+
+// Modal functions
+function openForm() {
+    document.getElementById('formModal').style.display = 'block';
+}
+
+function closeForm() {
+    document.getElementById('formModal').style.display = 'none';
+}
+
+// Khởi tạo khi trang load
+document.addEventListener('DOMContentLoaded', function() {
+    renderLeaves();
+    setupLeafClickHandlers();
+    
+    const addButton = document.getElementById('addLeafButton');
+    const closeButton = document.getElementById('closeModal');
+    const form = document.getElementById('gratitudeForm');
+    
+    if (addButton) {
+        addButton.addEventListener('click', openForm);
+    }
+    
+    if (closeButton) {
+        closeButton.addEventListener('click', closeForm);
+    }
+    
+    if (form) {
+        form.addEventListener('submit', async function(event) {
+            event.preventDefault();
+            
+            const studentName = document.getElementById('studentName').value.trim();
+            const teacherName = document.getElementById('teacherName').value.trim();
+            const message = document.getElementById('message').value.trim();
+            
+            if (studentName && teacherName && message) {
+                const newLeaf = await gratitudeTree.addLeaf(studentName, teacherName, message);
+                
+                closeForm();
+                document.getElementById('studentName').value = '';
+                document.getElementById('teacherName').value = '';
+                document.getElementById('message').value = '';
+                
+                if (gratitudeTree.leaves.length === 1) {
+                    showSuccessMessage('🎉 Bạn đã thêm chiếc lá đầu tiên lên cây!\n\nCảm ơn bạn đã khởi đầu cho cây tri ân này! 💚', false, 5000);
+                } else {
+                    showSuccessMessage('🎉 Lá tri ân của bạn đã được thêm vào cây!\n\nCây đang có ' + gratitudeTree.leaves.length + ' lá tri ân. 💚', false, 4000);
+                }
+            } else {
+                showSuccessMessage('❌ Vui lòng điền đầy đủ thông tin!', true);
+            }
+        });
+    }
+    
+    window.addEventListener('click', function(event) {
+        const modal = document.getElementById('formModal');
+        if (event.target === modal) {
+            closeForm();
+        }
+    });
+    
+    document.addEventListener('keydown', function(event) {
+        if (event.key === 'Escape') {
+            closeForm();
+        }
+    });
+});
+
+// Cập nhật lại leaf click handlers
+const originalRenderLeaves = renderLeaves;
+renderLeaves = function() {
+    originalRenderLeaves();
+    setTimeout(setupLeafClickHandlers, 100);
+};
