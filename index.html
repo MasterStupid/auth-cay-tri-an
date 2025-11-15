@@ -3,50 +3,70 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cây Tri Ân - 20/11 - FIT HPUni</title>
+    <title>Cây Tri Ân - 20/11 - Ngày Nhà Giáo Việt Nam - Lê Văn Quản</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div class="container">
         <header>
             <div class="header-content">
-                <h1>🌳 CÂY TRI ÂN 🌳</h1>
+                <h1>
+                    <span class="emoji">🌳</span>
+                    <span class="title-text">CÂY TRI ÂN - NGÀY NHÀ GIÁO VIỆT NAM 20/11</span>
+                    <span class="emoji">🌳</span>
+                </h1>
                 <p class="subtitle">Mỗi lời chúc của bạn sẽ thêm một chiếc lá xanh trên cành</p>
                 <p class="dedication">Dành tặng toàn thể thầy cô Trường ĐH Hải Phòng</p>
             </div>
         </header>
-        <div class="tree-section">
-            <div class="tree-container">
-                <!-- Cây sẽ được load từ database -->
-                <img src="https://i.postimg.cc/3J4QzYhp/cay-tri-an.png" alt="Cây Tri Ân" class="tree-image" onerror="replaceTreeImage()">
-                <div id="leaves-container" class="leaves-container"></div>
-            </div>
-        </div>
-        
-        <div class="stats">
-            <div class="stat-card">
-                <span class="stat-number" id="leaf-count">0</span>
-                <span class="stat-label">Lá Tri Ân</span>
-            </div>
-            <div class="stat-card">
-                <span class="stat-number" id="student-count">0</span>
-                <span class="stat-label">Sinh Viên</span>
-            </div>
-            <div class="stat-card">
-                <span class="stat-number" id="teacher-count">0</span>
-                <span class="stat-label">Thầy/Cô</span>
-            </div>
-        </div>
 
-        <div class="action-section">
-            <button id="addLeafButton" class="add-leaf-btn">
-                <span class="leaf-icon">🍃</span>
-                THÊM LÁ TRI ÂN
-            </button>
-            <p class="instruction-text">Mỗi lời cảm ơn của bạn sẽ thêm một chiếc lá xanh trên cành cây</p>
-            
-            <div class="database-status">
-                <span id="db-status">🔴 Đang kết nối database...</span>
+        <div class="main-content">
+            <!-- Tree Section -->
+            <div class="tree-section">
+                <div class="tree-container">
+                    <div class="tree-image-container">
+                        <img src="https://i.ibb.co/fVnbRMJ5/winter-tree-silhouette-with-bare-branches-vector.png" alt="Cây Tri Ân" class="tree-image">
+                    </div>
+                    
+                    <!-- Container cho lá -->
+                    <div id="leaves-container" class="leaves-container"></div>
+                    
+                    <!-- Thông báo khi đang tải -->
+                    <div id="loading-message" class="loading-message">
+                        <div class="spinner"></div>
+                        <p>Đang tải dữ liệu...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stats và Action Section -->
+            <div class="controls-section">
+                <div class="stats">
+                    <div class="stat-card">
+                        <span class="stat-number" id="leaf-count">0</span>
+                        <span class="stat-label">Lá Tri Ân</span>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-number" id="student-count">0</span>
+                        <span class="stat-label">Sinh viên</span>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-number" id="teacher-count">0</span>
+                        <span class="stat-label">Thầy Cô</span>
+                    </div>
+                </div>
+
+                <div class="action-section">
+                    <button id="addLeafButton" class="add-leaf-btn">
+                        <span class="leaf-icon">🍃</span>
+                        THÊM LÁ TRI ÂN
+                    </button>
+                    <p class="instruction-text">Mỗi lời cảm ơn của bạn sẽ thêm một chiếc lá xanh trên cành cây</p>
+                    
+                    <div class="database-status">
+                        <span id="db-status">🟢 Đang sử dụng Local Storage</span>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -63,12 +83,12 @@
                         <input type="text" id="studentName" placeholder="Nhập tên bạn..." required>
                     </div>
                     <div class="input-group">
-                        <label for="teacherName">Thầy/Cô bạn muốn gửi lời tri ân</label>
+                        <label for="teacherName">Thầy/Cô bạn muốn tri ân</label>
                         <input type="text" id="teacherName" placeholder="Nhập tên thầy/cô..." required>
                     </div>
                     <div class="input-group">
                         <label for="message">Lời tri ân</label>
-                        <textarea id="message" placeholder="Viết lời tri ân của bạn..." rows="4" required></textarea>
+                        <textarea id="message" placeholder="Viết lời cảm ơn chân thành của bạn..." rows="4" required></textarea>
                     </div>
                     <button type="submit" class="submit-btn">
                         <span class="leaf-icon">🍃</span>
@@ -81,7 +101,8 @@
         <footer class="contest-info">
             <p>💻 <strong>Cuộc thi "CODE TRI ÂN THẦY CÔ"</strong></p>
             <p>Khoa Công nghệ Thông tin - Trường Đại học Hải Phòng</p>
-            <p class="tech-info">Bài dự thi của Lê Văn QUản - CNTTK26.1</p>
+            <p class="tech-info">Chào mừng Ngày Nhà giáo Việt Nam 20/11</p>
+            <p class="tech-info">Lê Văn Quản - CNTTK26.01</p>
         </footer>
     </div>
 
